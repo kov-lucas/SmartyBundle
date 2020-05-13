@@ -124,6 +124,9 @@ class ActionsExtension extends AbstractExtension
             }
             unset($options['standalone']);
         }
+        if (isset($options['ignore_errors'])) {
+            $renderOptions['ignore_errors'] = $options['ignore_errors'];
+        }
 
         $isControllerReference = strpos($controller, ':') !== false;
 
