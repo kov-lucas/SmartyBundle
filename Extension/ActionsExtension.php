@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,21 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011-2018 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011-2018 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
- * @link        https://www.noiselabs.io
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Extension;
 
 use NoiseLabs\Bundle\SmartyBundle\Extension\Plugin\BlockPlugin;
 use NoiseLabs\Bundle\SmartyBundle\Extension\Plugin\ModifierPlugin;
-use Symfony\Bundle\FrameworkBundle\Templating\Helper\ActionsHelper;
+use NoiseLabs\Bundle\SmartyBundle\Templating\Helper\ActionsHelper;
+use SmartyException;
 
 /**
  * SmartyBundle extension for Symfony actions helper.
@@ -49,8 +45,6 @@ class ActionsExtension extends AbstractExtension
 
     /**
      * Constructor.
-     *
-     * @param ActionsHelper $actionsHelper
      */
     public function __construct(ActionsHelper $actionsHelper)
     {
@@ -64,28 +58,36 @@ class ActionsExtension extends AbstractExtension
     {
         return [
             new BlockPlugin('render', $this, 'renderBlockAction'),
-            new ModifierPlugin('render', $this, 'renderModifierAction')
+            new ModifierPlugin('render', $this, 'renderModifierAction'),
         ];
     }
 
     /**
      * Returns the Response content for a given controller or URI.
      *
-     * @param string $controller A controller name to execute (a string like BlogBundle:Post:index), or a relative URI
+     * @param null|string $controller A controller name to execute (a string like BlogBundle:Post:index), or a relative URI
+     * @param null|mixed  $template
+     * @param null|mixed  $repeat
      *
-     * @see Symfony\Bundle\FrameworkBundle\Templating\Helper\ActionsHelper::render()
-     * @see Symfony\Bundle\TwigBundle\Extension\ActionsExtension::renderAction()
+     * @throws SmartyException
      *
      * @return mixed
+     *
+     * @see \Symfony\Bundle\TwigBundle\Extension\ActionsExtension::renderAction()
+     * @see \NoiseLabs\Bundle\SmartyBundle\Templating\Helper\ActionsHelper::render()
      */
-    public function renderBlockAction(array $parameters = array(), $controller, $template, &$repeat)
+    public function renderBlockAction(array $parameters = [], $controller = null, $template = null, &$repeat = null): string
     {
         // only output on the closing tag
         if (!$repeat) {
-            $parameters = array_merge(array(
-                'attributes'    => array(),
-                'options'       => array()
-            ), $parameters);
+            $parameters = array_merge([
+                'attributes' => [],
+                'options' => [],
+            ], $parameters);
+
+            if (!$controller) {
+                throw new SmartyException('The controller parameter must be specified');
+            }
 
             return $this->render($controller, $parameters['attributes'], $parameters['options']);
         }
@@ -96,25 +98,20 @@ class ActionsExtension extends AbstractExtension
      *
      * @param string $controller A controller name to execute (a string like BlogBundle:Post:index), or a relative URI
      *
-     * @see Symfony\Bundle\FrameworkBundle\Templating\Helper\ActionsHelper::render()
-     * @see Symfony\Bundle\TwigBundle\Extension\ActionsExtension::renderAction()
+     * @see \NoiseLabs\Bundle\SmartyBundle\Templating\Helper\ActionsHelper::render()
+     * @see \Symfony\Bundle\TwigBundle\Extension\ActionsExtension::renderAction()
      */
-    public function renderModifierAction($controller, array $attributes = array(), array $options = array())
+    public function renderModifierAction($controller, array $attributes = [], array $options = [])
     {
         return $this->render($controller, $attributes, $options);
     }
 
     /**
      * @param $controller
-     * @param array $attributes
-     * @param array $options
-     * @return mixed
-     *
-     * @since Symfony-2.2
      */
-    protected function render($controller, array $attributes = array(), array $options = array())
+    protected function render($controller, array $attributes = [], array $options = []): string
     {
-        $renderOptions = array();
+        $renderOptions = [];
         if (isset($options['standalone']) && true === $options['standalone']) {
             if (isset($options['strategy'])) {
                 $renderOptions['strategy'] = $options['strategy'];

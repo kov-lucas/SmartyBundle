@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,14 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011-2018 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011-2018 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Exception;
 
@@ -36,7 +32,7 @@ use Smarty_Template_Source;
  * @note This class was heavily inspired in Twig_Error class. Credits goes to
  * Fabien Potencier (<fabien@symfony.com>) and the Twig community.
  *
- * @author  Vítor Brandão <vitor@noiselabs.com>
+ * @author Vítor Brandão <vitor@noiselabs.io>
  */
 class AbstractException extends Exception
 {
@@ -50,7 +46,7 @@ class AbstractException extends Exception
      * Constructor.
      *
      * @param string                   $message  The error message
-     * @param integer                  $lineno   The compiled template line where the error occurred
+     * @param int                      $lineno   The compiled template line where the error occurred
      * @param string                   $filename The compiled template file name where the error
      * @param Smarty_Internal_Template $template Smarty template
      * @param Exception                $previous The previous exception
@@ -73,8 +69,8 @@ class AbstractException extends Exception
         }
 
         $this->rawMessage = str_replace(
-            array('&quot;', '&gt;', '&lt;'),
-            array('"', '>', '<'),
+            ['&quot;', '&gt;', '&lt;'],
+            ['"', '>', '<'],
             html_entity_decode($message)
         );
 
@@ -130,7 +126,7 @@ class AbstractException extends Exception
     /**
      * Gets the template line where the error occurred.
      *
-     * @return integer The template line
+     * @return int The template line
      */
     public function getTemplateLine()
     {
@@ -140,7 +136,7 @@ class AbstractException extends Exception
     /**
      * Sets the template line where the error occurred.
      *
-     * @param integer $lineno The template line
+     * @param int $lineno The template line
      */
     public function setTemplateLine($lineno)
     {
@@ -186,9 +182,9 @@ class AbstractException extends Exception
             }
 
             $template = $trace['args'][2];
-            if (isset($trace['file']) &&
-                $template->compiled instanceof \Smarty_Template_Compiled &&
-                $template->compiled->filepath == $trace['file']) {
+            if (isset($trace['file'])
+                && $template->compiled instanceof \Smarty_Template_Compiled
+                && $template->compiled->filepath == $trace['file']) {
                 break;
             }
         }
@@ -198,5 +194,62 @@ class AbstractException extends Exception
             $this->filename = ($template->source instanceof Smarty_Template_Source) ?
                 $template->source->filepath : $template->template_resource;
         }
+    }
+
+    /**
+     * Because json_encode doesn't handle recursion.
+     *
+     * @see {@link http://blog.jezmckean.com/php-bug-json_encode-misleading-warning-on-object-with-private-properties/}
+     *
+     * This function returns a JSON representation of $param. It uses json_encode
+     * to accomplish this, but converts objects and arrays containing objects to
+     * associative arrays first. This way, objects that do not expose (all) their
+     * properties directly but only through an Iterator interface are also encoded
+     * correctly.
+     * @see {@link http://www.php.net/manual/en/function.json-encode.php#78688}
+     *
+     * @param mixed $param
+     */
+    protected function jsonEncode($param)
+    {
+        /**
+         * Convert an object into an associative array.
+         *
+         * This function converts an object into an associative array by iterating
+         * over its public properties. Because this function uses the foreach
+         * construct, Iterators are respected. It also works on arrays of objects.
+         *
+         * @param mixed $var
+         *
+         * @return array
+         */
+        function objectToArray($var)
+        {
+            $result = [];
+            $references = [];
+
+            // loop over elements/properties
+            foreach ($var as $key => $value) {
+                // recursively convert objects
+                if (is_object($value) || is_array($value)) {
+                    // but prevent cycles
+                    if (!in_array($value, $references)) {
+                        $result[$key] = objectToArray($value);
+                        $references[] = $value;
+                    }
+                } else {
+                    // simple values are untouched
+                    $result[$key] = $value;
+                }
+            }
+
+            return $result;
+        }
+
+        if (is_object($param) || is_array($param)) {
+            $param = objectToArray($param);
+        }
+
+        return json_encode($param);
     }
 }

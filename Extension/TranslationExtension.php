@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,15 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011-2018 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011-2018 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
- * @link        https://www.noiselabs.io
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Extension;
 
@@ -41,7 +36,7 @@ class TranslationExtension extends AbstractExtension
 {
     protected $translator;
 
-    public function __construct(TranslatorInterface $translator)
+    public function __construct($translator)
     {
         $this->translator = $translator;
     }
@@ -59,12 +54,12 @@ class TranslationExtension extends AbstractExtension
      */
     public function getPlugins()
     {
-        return array(
+        return [
             new BlockPlugin('trans', $this, 'transBlock'),
             new ModifierPlugin('trans', $this, 'transModifier'),
             new BlockPlugin('transchoice', $this, 'transchoiceBlock'),
-            new ModifierPlugin('transchoice', $this, 'transchoiceModifier')
-        );
+            new ModifierPlugin('transchoice', $this, 'transchoiceModifier'),
+        ];
     }
 
     /**
@@ -72,20 +67,19 @@ class TranslationExtension extends AbstractExtension
      *
      * @see TranslatorInterface::trans()
      *
-     * @param array $params Parameters to pass to the translator
-     * @param string $message Message to translate
-     *
-     * @return string
+     * @param array      $params  Parameters to pass to the translator
+     * @param string     $message Message to translate
+     * @param null|mixed $repeat
      */
-    public function transBlock(array $params = array(), $message = null, Smarty_Internal_Template $template, &$repeat)
+    public function transBlock(array $params = [], $message = null, Smarty_Internal_Template $template = null, &$repeat = null)
     {
         // only output on the closing tag
         if (!$repeat && isset($message)) {
-            $params = array_merge(array(
-                'vars'      => array(),
-                'domain'    => 'messages',
-                'locale'    => null,
-            ), $params);
+            $params = array_merge([
+                'vars' => [],
+                'domain' => 'messages',
+                'locale' => null,
+            ], $params);
 
             return $this->translator->trans($message, $params['vars'], $params['domain'], $params['locale']);
         }
@@ -100,8 +94,12 @@ class TranslationExtension extends AbstractExtension
      * <code>
      * {"text to be translated"|trans}
      * </code>
+     *
+     * @param mixed      $message
+     * @param mixed      $domain
+     * @param null|mixed $locale
      */
-    public function transModifier($message, array $parameters = array(), $domain = 'messages', $locale = null)
+    public function transModifier($message, array $parameters = [], $domain = 'messages', $locale = null)
     {
         return $this->translator->trans($message, $parameters, $domain, $locale);
     }
@@ -109,34 +107,40 @@ class TranslationExtension extends AbstractExtension
     /**
      * Block plugin for 'transchoice'.
      *
-     * @param string $message Message to translate
+     * @param string     $message Message to translate
+     * @param null|mixed $repeat
      */
-    public function transchoiceBlock(array $params = array(), $message = null, Smarty_Internal_Template $template, &$repeat)
+    public function transchoiceBlock(array $params = [], $message = null, Smarty_Internal_Template $template = null, &$repeat = null)
     {
         // only output on the closing tag
         if (!$repeat && isset($message)) {
-            $params = array_merge(array(
-                'count'     => null,
-                'vars'      => array(),
-                'domain'    => 'messages',
-                'locale'    => null,
-            ), $params);
+            $params = array_merge([
+                'count' => null,
+                'vars' => [],
+                'domain' => 'messages',
+                'locale' => null,
+            ], $params);
 
             // Replace [123] with {123}
-            if ($template->smarty->left_delimiter == '{' || $template->smarty->right_delimiter == '}') {
-                $message = preg_replace("/\[([0-9]*)\] (.*?)/i", '{$1} $2', $message);
+            if ('{' == $template->smarty->left_delimiter || '}' == $template->smarty->right_delimiter) {
+                $message = preg_replace('/\\[([0-9]*)\\] (.*?)/i', '{$1} $2', $message);
             }
 
-            return $this->translator->transchoice($message, $params['count'], array_merge(array('%count%' => $params['count']), $params['vars']), $params['domain'], $params['locale']);
+            return $this->translator->trans($message, array_merge(['%count%' => $params['count']], $params['vars']), $params['domain'], $params['locale']);
         }
     }
 
     /**
      * Modifier plugin for 'transchoice'.
+     *
+     * @param mixed      $message
+     * @param mixed      $count
+     * @param mixed      $domain
+     * @param null|mixed $locale
      */
-    public function transchoiceModifier($message, $count, array $parameters = array(), $domain = 'messages', $locale = null)
+    public function transchoiceModifier($message, $count, array $parameters = [], $domain = 'messages', $locale = null)
     {
-        return $this->translator->transChoice($message, $count, array_merge(array('%count%' => $count), $parameters), $domain, $locale);
+        return $this->translator->trans($message, array_merge(['%count%' => $count], $parameters), $domain, $locale);
     }
 
     /**

@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,15 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011-2018 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011-2018 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
- * @link        https://www.noiselabs.io
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Loader;
 
@@ -56,9 +51,6 @@ class TemplateLoader
 
     /**
      * TemplateLoader constructor.
-     *
-     * @param TemplateNameParserInterface $parser
-     * @param LoaderInterface $loader
      */
     public function __construct(TemplateNameParserInterface $parser, LoaderInterface $loader)
     {
@@ -71,16 +63,16 @@ class TemplateLoader
     /**
      * @param string|TemplateReferenceInterface $name
      *
-     * @return string
-     *
      * @throws TemplateNotFoundException
+     *
+     * @return string
      */
     public function load($name)
     {
         $templateId = $name instanceof TemplateReferenceInterface ? $name->getLogicalName() : $name;
 
-        if (isset($this->cache[$name])) {
-            return $this->cache[$name];
+        if (isset($this->cache[$templateId])) {
+            return $this->cache[$templateId];
         }
 
         $template = $name instanceof TemplateReferenceInterface ? $name : $this->defaultTemplateParser->parse($name);

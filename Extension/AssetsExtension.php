@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,21 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
- * @link        https://www.noiselabs.io
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Extension;
 
 use NoiseLabs\Bundle\SmartyBundle\Extension\Plugin\BlockPlugin;
 use NoiseLabs\Bundle\SmartyBundle\Extension\Plugin\FunctionPlugin;
 use NoiseLabs\Bundle\SmartyBundle\Extension\Plugin\ModifierPlugin;
+use Smarty_Internal_Template;
 use Symfony\Component\Asset\Packages;
 
 /**
@@ -58,11 +54,11 @@ class AssetsExtension extends AbstractExtension
      */
     public function getPlugins()
     {
-        return array(
+        return [
             new BlockPlugin('asset', $this, 'getAssetUrl_block'),
             new ModifierPlugin('asset', $this, 'getAssetUrl_modifier'),
-            new FunctionPlugin('assets_version', $this, 'getAssetsVersion')
-        );
+            new FunctionPlugin('assets_version', $this, 'getAssetsVersion'),
+        ];
     }
 
     /**
@@ -81,35 +77,38 @@ class AssetsExtension extends AbstractExtension
     }
 
     /**
-     * Returns the public path of an asset
+     * Returns the public path of an asset.
      *
      * Absolute paths (i.e. http://...) are returned unmodified.
      *
-     * @param string $path A public path
+     * @param string     $path     A public path
+     * @param null|mixed $template
+     * @param null|mixed $repeat
      *
      * @return string A public path which takes into account the base path and URL path
      */
-    public function getAssetUrl_block(array $parameters = array(), $path = null, $template, &$repeat)
+    public function getAssetUrl_block(array $parameters = [], $path = null, $template = null, &$repeat = null)
     {
         // only output on the closing tag
         if (!$repeat) {
-            $parameters = array_merge(array(
-                'package'   => null,
-            ), $parameters);
+            $parameters = array_merge([
+                'package' => null,
+            ], $parameters);
 
             return $this->packages->getUrl($path, $parameters['package']);
         }
     }
 
     /**
-     * Returns the public path of an asset
+     * Returns the public path of an asset.
      *
      * Absolute paths (i.e. http://...) are returned unmodified.
      *
-     * @param string $path A public path
+     * @param string     $path    A public path
+     * @param null|mixed $package
      *
      * @return string A public path which takes into account the base path
-     * and URL path
+     *                and URL path
      */
     public function getAssetUrl_modifier($path, $package = null)
     {
@@ -117,17 +116,17 @@ class AssetsExtension extends AbstractExtension
     }
 
     /**
-     * Returns the version of the assets in a package
+     * Returns the version of the assets in a package.
      *
      * @return string
      */
-    public function getAssetsVersion(array $parameters = array(), \Smarty_Internal_Template $template)
+    public function getAssetsVersion(array $parameters = [], Smarty_Internal_Template $template = null)
     {
-        $parameters = array_merge(array(
-            'package'   => null,
-        ), $parameters);
+        $parameters = array_merge([
+            'package' => null,
+        ], $parameters);
 
-        return $this->packages->getVersion(null, $parameters['package']);
+        return $this->packages->getVersion('', $parameters['package']);
     }
 
     /**

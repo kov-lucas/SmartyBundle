@@ -1,6 +1,8 @@
 <?php
-/**
- * This file is part of NoiseLabs-SmartyBundle
+/*
+ * This file is part of the NoiseLabs-SmartyBundle package.
+ *
+ * Copyright (c) 2011-2021 Vítor Brandão <vitor@noiselabs.io>
  *
  * NoiseLabs-SmartyBundle is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -15,22 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with NoiseLabs-SmartyBundle; if not, see
  * <http://www.gnu.org/licenses/>.
- *
- * Copyright (C) 2011-2018 Vítor Brandão
- *
- * @category    NoiseLabs
- * @package     SmartyBundle
- * @copyright   (C) 2011-2018 Vítor Brandão <vitor@noiselabs.io>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL-3
- * @link        https://www.noiselabs.io
  */
+declare(strict_types=1);
 
 namespace NoiseLabs\Bundle\SmartyBundle\Extension\Plugin;
 
 use NoiseLabs\Bundle\SmartyBundle\Extension\ExtensionInterface;
 
 /**
- * The Plugin base class represents a OO approach to the Smarty plugin
+ * The Plugin base class represents an OO approach to the Smarty plugin
  * architecture.
  *
  * See {@link http://www.smarty.net/docs/en/plugins.tpl}.
@@ -78,7 +73,7 @@ abstract class AbstractPlugin implements PluginInterface
      * @param ExtensionInterface $extension A ExtensionInterface instance
      * @param string             $method    Method name
      */
-    public function __construct($name, ExtensionInterface $extension, $method)
+    public function __construct(string $name, ExtensionInterface $extension, string $method)
     {
         $this->name = $name;
         $this->extension = $extension;
@@ -95,6 +90,8 @@ abstract class AbstractPlugin implements PluginInterface
 
     /**
      * Set the plugin name.
+     *
+     * @param mixed $name
      */
     public function setName($name)
     {
@@ -106,7 +103,7 @@ abstract class AbstractPlugin implements PluginInterface
      */
     public function getCallback()
     {
-        return array($this->extension, $this->method);
+        return [$this->extension, $this->method];
     }
 
     /**
