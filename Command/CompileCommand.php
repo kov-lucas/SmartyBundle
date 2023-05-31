@@ -48,6 +48,8 @@ class CompileCommand extends Command
      */
     private $finder;
 
+    protected static $defaultName = 'smarty:compile';
+
     public function __construct(SmartyEngine $engine, TemplateFinder $finder)
     {
         parent::__construct();
@@ -59,23 +61,21 @@ class CompileCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('smarty:compile')
+            ->setDefinition([
+                new InputArgument('bundle', InputArgument::OPTIONAL, 'The bundle name or directory where to load the templates'),
+            ])
             ->setDescription('Compiles all known Smarty templates')
-            ->addArgument(
-                'bundle',
-                InputArgument::OPTIONAL,
-                'A bundle name'
-            )
-            ->setHelp(<<<EOF
-The following command finds all known Smarty templates and compiles them:
+            ->setHelp(
+                <<<'EOF'
+                    The following command finds all known Smarty templates and compiles them:
 
-<info>php %command.full_name%</info>
+                    <info>php %command.full_name%</info>
 
-Alternatively you may pass an optional <comment>@AcmeMyBundle</comment> argument to only search
-for templates in a specific bundle:
+                    Alternatively you may pass an optional <comment>@AcmeMyBundle</comment> argument to only search
+                    for templates in a specific bundle:
 
-<info>php %command.full_name% @AcmeMyBundle</info>
-EOF
+                    <info>php %command.full_name% @AcmeMyBundle</info>
+                    EOF
             )
         ;
     }
@@ -113,12 +113,8 @@ EOF
                 }
             } catch (\Exception $e) {
                 $e = SmartyBundleRuntimeException::createFromPrevious($e, $template);
-                // problem during compilation, log it and give up
-                if ($verbose) {
-                    $output->writeln("");
-                }
                 $output->writeln(sprintf("<error>ERROR: Failed to compile Smarty template \"%s\"</error>\n-> %s\n", (string) $template, $e->getMessage()));
-                $count['failed']++;
+                ++$count['failed'];
             }
         }
 
@@ -130,5 +126,7 @@ EOF
             $output->write(sprintf("- Failed to compile <error>%d</error> files.\n", $count['failed']));
         }
         $output->write(sprintf("- Total compilation time: <comment>%f secs</comment>.\n", $totalCtime));
+
+        return $count['failed'] > 0 ? -1 : 0;
     }
 }

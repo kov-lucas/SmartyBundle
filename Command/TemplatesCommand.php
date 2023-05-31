@@ -41,6 +41,8 @@ class TemplatesCommand extends Command
      */
     private $finder;
 
+    protected static $defaultName = 'smarty:templates';
+
     public function __construct(TemplateFinder $finder)
     {
         parent::__construct();
@@ -51,18 +53,21 @@ class TemplatesCommand extends Command
     protected function configure()
     {
         $this
+            ->setDefinition([
+                new InputArgument('bundle', InputArgument::OPTIONAL, 'The bundle name where to load the templates'),
+            ])
             ->setDescription('Lists all Smarty templates')
-            ->addArgument('bundle', InputArgument::OPTIONAL, 'A bundle name')
-            ->setHelp(<<<'EOF'
-The <info>%command.name%</info> command lists all Smarty templates found in the current project
+            ->setHelp(
+                <<<'EOF'
+                    The <info>%command.name%</info> command lists all Smarty templates found in the current project
 
-<info>php %command.full_name%</info>
+                    <info>php %command.full_name%</info>
 
-Alternatively you may pass an optional <comment>@AcmeMyBundle</comment> argument to only search
-for templates in a specific bundle:
+                    Alternatively you may pass an optional <comment>@AcmeMyBundle</comment> argument to only search
+                    for templates in a specific bundle:
 
-<info>php %command.full_name% @AcmeMyBundle</info>
-EOF
+                    <info>php %command.full_name% @AcmeMyBundle</info>
+                    EOF
             )
         ;
     }

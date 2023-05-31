@@ -121,24 +121,12 @@ class ActionsExtension extends AbstractExtension
             }
             unset($options['standalone']);
         }
-        if (isset($options['ignore_errors'])) {
-            $renderOptions['ignore_errors'] = $options['ignore_errors'];
-        }
 
-        $isControllerReference = strpos($controller, ':') !== false;
+        $isControllerReference = false !== strpos($controller, ':');
+        $uri = $isControllerReference ? $this->actionsHelper->controller($controller, $attributes, $options) : $controller;
+        $options = $isControllerReference ? $renderOptions : array_merge($renderOptions, $attributes);
 
-        return $this->getActionsHelper()->render(
-            $isControllerReference ? $this->getActionsHelper()->controller($controller, $attributes, $options) : $controller,
-            $isControllerReference ? $renderOptions : array_merge($renderOptions, $attributes)
-        );
-    }
-
-    /**
-     * @return ActionsHelper
-     */
-    protected function getActionsHelper()
-    {
-        return $this->actionsHelper;
+        return $this->actionsHelper->render($uri, $options);
     }
 
     /**
